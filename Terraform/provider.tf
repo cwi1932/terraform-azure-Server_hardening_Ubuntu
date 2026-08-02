@@ -17,9 +17,9 @@ terraform {
       source  = "hashicorp/tls"
       version = "~> 4.0"
     }
+
   }
-}
-backend "azurerm" {
+  backend "azurerm" {
     resource_group_name  = "rg-tfstate"
     storage_account_name = "tfstatepramod23062026"
     container_name       = "tfstate"
@@ -28,10 +28,11 @@ backend "azurerm" {
     use_azuread_auth = true
 
   }
-  resource "tls_private_key" "ssh" {
-    algorithm = "RSA"
-    rsa_bits  = 4096
-  }
+}
+resource "tls_private_key" "ssh" {
+  algorithm = "RSA"
+  rsa_bits  = 4096
+}
 
 
 provider "azurerm" {
