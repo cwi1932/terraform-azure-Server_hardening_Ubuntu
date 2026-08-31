@@ -1,4 +1,14 @@
 terraform {
+  backend "azurerm" {
+    resource_group_name  = "MyResourceGroup"
+    storage_account_name = "azststest1983"
+    container_name       = "tfstate"
+    key                  = "terraform.tfstate"
+
+    use_azuread_auth = true
+
+  }
+
   required_version = ">=1.1.0"
   required_providers {
     azurerm = {
@@ -19,19 +29,11 @@ terraform {
     }
   }
 }
-backend "azurerm" {
-    resource_group_name  = "rg-tfstate"
-    storage_account_name = "tfstatepramod23062026"
-    container_name       = "tfstate"
-    key                  = "terraform.tfstate"
 
-    use_azuread_auth = true
-
-  }
-  resource "tls_private_key" "ssh" {
-    algorithm = "RSA"
-    rsa_bits  = 4096
-  }
+resource "tls_private_key" "ssh" {
+  algorithm = "RSA"
+  rsa_bits  = 4096
+}
 
 
 provider "azurerm" {
