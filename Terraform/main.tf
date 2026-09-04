@@ -153,7 +153,7 @@ resource "azurerm_lb_outbound_rule" "outbound_rule_LB" {
 resource "azurerm_linux_virtual_machine" "VMB-BackendA" {
   name                  = "UB_VM_SRV_backendA"
   resource_group_name   = azurerm_resource_group.RG.name
-  network_interface_ids = azurerm_network_interface.VMNIC1.id
+  network_interface_ids = [azurerm_network_interface.VMNIC1.id]
   location              = azurerm_resource_group.RG.location
   admin_ssh_key {
     username   = "adminuser"
@@ -184,7 +184,7 @@ resource "azurerm_linux_virtual_machine" "VMB-BackendA" {
 resource "azurerm_linux_virtual_machine" "VMB-BackendB" {
   name                  = "UB_VM_SRV_backendB"
   resource_group_name   = azurerm_resource_group.RG.name
-  network_interface_ids = azurerm_network_interface.VMNIC2.id
+  network_interface_ids = [azurerm_network_interface.VMNIC2.id]
   location              = azurerm_resource_group.RG.location
   admin_ssh_key {
     username   = "adminuser"
@@ -306,7 +306,7 @@ resource "azurerm_key_vault" "KV" {
 resource "azurerm_key_vault_secret" "windows_admin_password" {
   name         = "windows-admin-password"
   value        = random_password.windows_admin_password.result
-  key_vault_id = azurerm_key_vault.KV
+  key_vault_id = azurerm_key_vault.KV.id
   depends_on = [
     azurerm_role_assignment.MssqlServer_kv_role
   ]
