@@ -1,0 +1,74 @@
+on:
+  push:
+    branches:
+      - main
+    paths-ignore:
+      - 'README.md'
+      - 'docs/**'
+  pull_request:
+    branches:
+      - main
+   
+permissions:
+    contents: read
+    pull-requests: write
+jobs:
+  terraform:
+    name: Terraform
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: Terraform/Terraform
+    env:
+      ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
+      ARM_CLIENT_SECRET: ${{ secrets.ARM_CLIENT_SECRET }}
+      ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
+      ARM_TENANT_ID: ${{ secrets.ARM_TENANT_ID }}
+          
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+      - name: Setup TFLint
+        uses: terraform-linters/setup-tflint@v6
+        with:
+          tflint_version: v0.52.0
+          cache: true
+
+      - name: Show version
+        run: tflint --version
+
+      - name: Init TFLint
+        run: tflint --init
+      - name: Run TFLint
+        run: tflint  
+      - name: Run Gitleaks
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - uses: hashicorp/setup-terraform@v2
+        with:
+          terraform_version: 1.7.5
+      - name: Terraform Format
+        id: fmt
+        run: terraform fmt -check -recursive
+      - name: Terraform Init
+        id: init
+        run: terraform init 
+      - name: Terraform Validate
+        id: validate
+        run: terraform validate 
+      - name : Terraform Plan
+        id: plan
+        run: terraform plan -out=tfplan   
+      - name: Terraform Apply
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        run: terraform apply -auto-approve tfplan
+
+      - name: Ansible Inventory List
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        run: |
+          echo "[backend]" > ansible.ini
+          echo "backendA ansible_host=$(terraform output -raw backendA_private_ip)" >> ansible.ini
+          echo "backendB ansible_host=$(terraform output -raw backendB_private_ip)" >> ansible.ini      
+        
+  
