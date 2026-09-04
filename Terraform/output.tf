@@ -5,4 +5,3 @@ output "backendA_private_ip" {
   output "backendB_private_ip" {
   value = azurerm_network_interface.VMNIC2.private_ip_address
 }
-
