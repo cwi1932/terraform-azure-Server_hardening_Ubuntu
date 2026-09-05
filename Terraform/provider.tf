@@ -38,6 +38,6 @@ resource "tls_private_key" "ssh" {
 
 provider "azurerm" {
   features {}
-
+  use_cli = false
 }
 
