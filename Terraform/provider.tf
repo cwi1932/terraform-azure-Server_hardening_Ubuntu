@@ -16,7 +16,7 @@ terraform {
       source  = "hashicorp/azurerm"
       version = "~>4.0"
     }
-    
+
     # FIX: These are now properly placed inside required_providers
     random = {
       source  = "hashicorp/random"
@@ -27,8 +27,8 @@ terraform {
       source  = "hashicorp/tls"
       version = "~> 4.0"
     }
-  } 
-} 
+  }
+}
 
 # Keep your resource declaration here
 resource "tls_private_key" "ssh" {
@@ -39,5 +39,5 @@ resource "tls_private_key" "ssh" {
 provider "azurerm" {
   features {}
   # Also keep this set here for the provider stage
-  use_oidc = false 
+  use_oidc = false
 }
