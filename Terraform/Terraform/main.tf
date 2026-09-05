@@ -66,7 +66,7 @@ resource "azurerm_network security_group" "NSG" {
          name = NSG
          resource_group_name = "azurem_resource_group_RG.name"
          location = azurerm_resource_group.RG.Location
-
+}
 resource "azurerm_network_security_rule" "NSGRULE" {
          name = NSGRULE
          resource_group_name = "azurem_resource_group_RG.name"
@@ -81,7 +81,7 @@ resource "azurerm_network_security_rule" "NSGRULE" {
          destination_address_prefix = "*"
 
 
-
+}
 
 resource "azurerm_key_vault" "KV" {
          name = KV_SRV_HRD
