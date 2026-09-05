@@ -16,9 +16,24 @@ terraform {
       source  = "hashicorp/azurerm"
       version = "~>4.0"
     }
-    random = { source = "hashicorp/random" }
-    tls    = { source = "hashicorp/tls" }
-  }
+    
+    # FIX: These are now properly placed inside required_providers
+    random = {
+      source  = "hashicorp/random"
+      version = "~> 3.0"
+    }
+
+    tls = {
+      source  = "hashicorp/tls"
+      version = "~> 4.0"
+    }
+  } 
+} 
+
+# Keep your resource declaration here
+resource "tls_private_key" "ssh" {
+  algorithm = "RSA"
+  rsa_bits  = 4096
 }
 
 provider "azurerm" {
