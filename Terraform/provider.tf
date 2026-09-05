@@ -5,8 +5,9 @@ terraform {
     container_name       = "tfstate"
     key                  = "terraform.tfstate"
 
+    # THIS IS THE CRITICAL FIX FOR THE BACKEND STAGE
+    use_azure_cli    = false
     use_azuread_auth = false
-
   }
 
   required_version = ">=1.1.0"
@@ -14,30 +15,14 @@ terraform {
     azurerm = {
       source  = "hashicorp/azurerm"
       version = "~>4.0"
-
     }
-
-
-    random = {
-      source  = "hashicorp/random"
-      version = "~> 3.0"
-    }
-
-    tls = {
-      source  = "hashicorp/tls"
-      version = "~> 4.0"
-    }
+    random = { source = "hashicorp/random" }
+    tls    = { source = "hashicorp/tls" }
   }
 }
 
-resource "tls_private_key" "ssh" {
-  algorithm = "RSA"
-  rsa_bits  = 4096
-}
-
-
 provider "azurerm" {
   features {}
-  use_cli = false
+  # Also keep this set here for the provider stage
+  use_oidc = false 
 }
-
