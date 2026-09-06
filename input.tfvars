@@ -1,1 +1,1 @@
-location = "eastus"
+location = "Central US"
