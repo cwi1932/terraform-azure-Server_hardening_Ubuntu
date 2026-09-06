@@ -40,7 +40,7 @@ resource "azurerm_subnet" "SUBA" {
 resource "azurerm_subnet" "SUBB" {
 
   name                 = "Sub2"
-  address_prefixes     = ["10.10.0.0/28"]
+  address_prefixes     = ["10.0.0.16/28"]
   virtual_network_name = azurerm_virtual_network.SRV_HRD_VNT1.name
   resource_group_name  = azurerm_resource_group.RG.name
 }
@@ -154,7 +154,7 @@ resource "azurerm_lb_outbound_rule" "outbound_rule_LB" {
 
 
 resource "azurerm_linux_virtual_machine" "VMB-BackendA" {
-  name                  = "UB_VM_SRV_backendA"
+  name                  = "UBVMSRVbackendA"
   resource_group_name   = azurerm_resource_group.RG.name
   network_interface_ids = [azurerm_network_interface.VMNIC1.id]
   location              = azurerm_resource_group.RG.location
@@ -185,7 +185,7 @@ resource "azurerm_linux_virtual_machine" "VMB-BackendA" {
 
 
 resource "azurerm_linux_virtual_machine" "VMB-BackendB" {
-  name                  = "UB_VM_SRV_backendB"
+  name                  = "UBVMSRVbackendB"
   resource_group_name   = azurerm_resource_group.RG.name
   network_interface_ids = [azurerm_network_interface.VMNIC2.id]
   location              = azurerm_resource_group.RG.location
