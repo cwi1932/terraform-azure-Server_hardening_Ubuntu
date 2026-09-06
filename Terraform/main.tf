@@ -31,7 +31,7 @@ resource "azurerm_virtual_network" "SRV_HRD_VNT1" {
 resource "azurerm_subnet" "SUBA" {
 
   name                 = "Sub1"
-  address_prefixes     = ["10.0.0.1/28"]
+  address_prefixes     = ["10.0.0.0/28"]
   virtual_network_name = azurerm_virtual_network.SRV_HRD_VNT1.name
   resource_group_name  = azurerm_resource_group.RG.name
 
@@ -40,7 +40,7 @@ resource "azurerm_subnet" "SUBA" {
 resource "azurerm_subnet" "SUBB" {
 
   name                 = "Sub2"
-  address_prefixes     = ["10.10.0.2/28"]
+  address_prefixes     = ["10.10.0.0/28"]
   virtual_network_name = azurerm_virtual_network.SRV_HRD_VNT1.name
   resource_group_name  = azurerm_resource_group.RG.name
 }
@@ -70,6 +70,7 @@ resource "azurerm_lb_rule" "LB_rule" {
   frontend_port                  = 80
   backend_port                   = 80
   frontend_ip_configuration_name = "PublicIPAddress"
+  disable_outbound_snat          = true
 }
 
 resource "azurerm_lb_probe" "probe_LB" {
@@ -142,8 +143,10 @@ resource "azurerm_lb_outbound_rule" "outbound_rule_LB" {
   loadbalancer_id         = azurerm_lb.PLB.id
   protocol                = "Tcp"
   backend_address_pool_id = azurerm_lb_backend_address_pool.backend_pool_LB_name.id
+
   frontend_ip_configuration {
     name = "PublicIPAddress"
+    
 
 
   }
@@ -274,7 +277,7 @@ resource "azurerm_network_security_rule" "NSGRULE" {
   direction                   = "Inbound"
   access                      = "Allow"
   protocol                    = "Tcp"
-  source_port_range           = "116.68.78.47"
+  source_port_range           = "*"
   destination_port_range      = "22"
   source_address_prefix       = "116.68.78.47/32"
   destination_address_prefix  = "*"
