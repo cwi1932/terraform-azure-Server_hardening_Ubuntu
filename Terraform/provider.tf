@@ -6,8 +6,7 @@ terraform {
     key                  = "terraform.tfstate"
 
     # THIS IS THE CRITICAL FIX FOR THE BACKEND STAGE
-    use_azure_cli    = false
-    use_azuread_auth = false
+     use_azure_cli = True
   }
 
   required_version = ">=1.1.0"
@@ -38,6 +37,5 @@ resource "tls_private_key" "ssh" {
 
 provider "azurerm" {
   features {}
-  # Also keep this set here for the provider stage
-  use_oidc = false
+
 }
