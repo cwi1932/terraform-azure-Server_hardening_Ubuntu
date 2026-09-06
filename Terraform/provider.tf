@@ -5,8 +5,8 @@ terraform {
     container_name       = "tfstate"
     key                  = "terraform.tfstate"
 
+    # THIS IS THE CRITICAL FIX FOR THE BACKEND STAGE
     use_azuread_auth = true
-
   }
 
   required_version = ">=1.1.0"
@@ -14,10 +14,9 @@ terraform {
     azurerm = {
       source  = "hashicorp/azurerm"
       version = "~>4.0"
-
     }
 
-
+    # FIX: These are now properly placed inside required_providers
     random = {
       source  = "hashicorp/random"
       version = "~> 3.0"
@@ -30,14 +29,13 @@ terraform {
   }
 }
 
+# Keep your resource declaration here
 resource "tls_private_key" "ssh" {
   algorithm = "RSA"
   rsa_bits  = 4096
 }
 
-
 provider "azurerm" {
   features {}
 
 }
-

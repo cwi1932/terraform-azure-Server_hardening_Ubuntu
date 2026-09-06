@@ -8,13 +8,13 @@ data "azurerm_client_config" "current" {
 
 resource "random_password" "windows_admin_password" {
 
-length = 16
-special = true
-override_special = "!#$%&*()-_=+[]{}<>:?"
-min_upper = 1
-min_lower = 1
-min_numeric = 1
-min_special = 1
+  length           = 16
+  special          = true
+  override_special = "!#$%&*()-_=+[]{}<>:?"
+  min_upper        = 1
+  min_lower        = 1
+  min_numeric      = 1
+  min_special      = 1
 
 }
 
@@ -34,7 +34,7 @@ resource "azurerm_subnet" "SUBA" {
   address_prefixes     = ["10.0.0.1/28"]
   virtual_network_name = azurerm_virtual_network.SRV_HRD_VNT1.name
   resource_group_name  = azurerm_resource_group.RG.name
- 
+
 }
 
 resource "azurerm_subnet" "SUBB" {
@@ -53,11 +53,11 @@ resource "azurerm_public_ip" "Standard_LB_IP" {
 }
 
 resource "azurerm_lb" "PLB" {
-  name = var.load_balancer_name
+  name                = var.load_balancer_name
   resource_group_name = azurerm_resource_group.RG.name
-  location = azurerm_resource_group.RG.location
-   sku = "Standard"   
-   frontend_ip_configuration {
+  location            = azurerm_resource_group.RG.location
+  sku                 = "Standard"
+  frontend_ip_configuration {
     name                 = "PublicIPAddress"
     public_ip_address_id = azurerm_public_ip.Standard_LB_IP.id
   }
@@ -74,10 +74,10 @@ resource "azurerm_lb_rule" "LB_rule" {
 
 resource "azurerm_lb_probe" "probe_LB" {
   loadbalancer_id = azurerm_lb.PLB.id
-  protocol           = "Http"
+  protocol        = "Http"
   name            = "http-running-probe"
   port            = 80
-  request_path = "/"
+  request_path    = "/"
 }
 resource "azurerm_lb_backend_address_pool" "backend_pool_LB_name" {
   loadbalancer_id = azurerm_lb.PLB.id
@@ -85,41 +85,41 @@ resource "azurerm_lb_backend_address_pool" "backend_pool_LB_name" {
 }
 
 resource "azurerm_lb_nat_rule" "LB_nat_rule1" {
-  resource_group_name = azurerm_resource_group.RG.name
-  loadbalancer_id    = azurerm_lb.PLB.id
-  name = "LBnatrule1"
-  protocol = "Tcp"
-  frontend_port_start              = 3000
-  frontend_port_end                = 3500
-  backend_port = 80
+  resource_group_name            = azurerm_resource_group.RG.name
+  loadbalancer_id                = azurerm_lb.PLB.id
+  name                           = "LBnatrule1"
+  protocol                       = "Tcp"
+  frontend_port_start            = 3000
+  frontend_port_end              = 3500
+  backend_port                   = 80
   backend_address_pool_id        = azurerm_lb_backend_address_pool.backend_pool_LB_name.id
   frontend_ip_configuration_name = "PublicIPAddress"
-  
+
 }
 
 resource "azurerm_lb_nat_rule" "LB_nat_rule2" {
-  resource_group_name = azurerm_resource_group.RG.name
-  loadbalancer_id    = azurerm_lb.PLB.id
-  name = "LBnatrule2"
-  protocol = "Tcp"
-  frontend_port_start              = 4000
-  frontend_port_end                = 4500
-  backend_port = 443
+  resource_group_name            = azurerm_resource_group.RG.name
+  loadbalancer_id                = azurerm_lb.PLB.id
+  name                           = "LBnatrule2"
+  protocol                       = "Tcp"
+  frontend_port_start            = 4000
+  frontend_port_end              = 4500
+  backend_port                   = 443
   backend_address_pool_id        = azurerm_lb_backend_address_pool.backend_pool_LB_name.id
   frontend_ip_configuration_name = "PublicIPAddress"
-  
+
 }
 resource "azurerm_lb_nat_rule" "Linux_backendVM_LB_nat_rule" {
-  resource_group_name = azurerm_resource_group.RG.name
-  loadbalancer_id    = azurerm_lb.PLB.id
-  name = "LBnatrul3"
-  protocol = "Tcp"
-  frontend_port_start = 500
-  frontend_port_end = 1000
-  backend_port = 22
+  resource_group_name            = azurerm_resource_group.RG.name
+  loadbalancer_id                = azurerm_lb.PLB.id
+  name                           = "LBnatrul3"
+  protocol                       = "Tcp"
+  frontend_port_start            = 500
+  frontend_port_end              = 1000
+  backend_port                   = 22
   backend_address_pool_id        = azurerm_lb_backend_address_pool.backend_pool_LB_name.id
   frontend_ip_configuration_name = "PublicIPAddress"
-  
+
 }
 
 
@@ -127,28 +127,28 @@ resource "azurerm_lb_backend_address_pool_address" "backend_pool_LB_IP_backendA"
   name                    = "backedendA"
   backend_address_pool_id = azurerm_lb_backend_address_pool.backend_pool_LB_name.id
   virtual_network_id      = azurerm_virtual_network.SRV_HRD_VNT1.id
-  ip_address = azurerm_network_interface.VMNIC1.private_ip_address
+  ip_address              = azurerm_network_interface.VMNIC1.private_ip_address
 }
 
 resource "azurerm_lb_backend_address_pool_address" "backend_pool_LB_IP_backendB" {
   name                    = "backedendB"
   backend_address_pool_id = azurerm_lb_backend_address_pool.backend_pool_LB_name.id
   virtual_network_id      = azurerm_virtual_network.SRV_HRD_VNT1.id
-  ip_address = azurerm_network_interface.VMNIC2.private_ip_address
+  ip_address              = azurerm_network_interface.VMNIC2.private_ip_address
 }
 resource "azurerm_lb_outbound_rule" "outbound_rule_LB" {
-  
-  name = "OutboundRule"
-    loadbalancer_id = azurerm_lb.PLB.id
-    protocol        = "Tcp"
+
+  name                    = "OutboundRule"
+  loadbalancer_id         = azurerm_lb.PLB.id
+  protocol                = "Tcp"
   backend_address_pool_id = azurerm_lb_backend_address_pool.backend_pool_LB_name.id
   frontend_ip_configuration {
-    name                 = "PublicIPAddress"
-    
+    name = "PublicIPAddress"
+
 
   }
 }
- 
+
 
 resource "azurerm_linux_virtual_machine" "VMB-BackendA" {
   name                  = "UB_VM_SRV_backendA"
@@ -171,8 +171,8 @@ resource "azurerm_linux_virtual_machine" "VMB-BackendA" {
     sku       = "server"
     version   = "latest"
   }
-  size = "Standard_B1s"
-   admin_username = "adminuser"
+  size           = "Standard_B1s"
+  admin_username = "adminuser"
 
   identity {
     type = "SystemAssigned"
@@ -202,8 +202,8 @@ resource "azurerm_linux_virtual_machine" "VMB-BackendB" {
     sku       = "server"
     version   = "latest"
   }
-  size = "Standard_B1s"
-   admin_username = "adminuser"
+  size           = "Standard_B1s"
+  admin_username = "adminuser"
 
   identity {
     type = "SystemAssigned"
@@ -212,10 +212,10 @@ resource "azurerm_linux_virtual_machine" "VMB-BackendB" {
 }
 
 resource "azurerm_mssql_server" "AzSQLPaaSDB" {
-  name = "azsqlsrv"
-  resource_group_name = azurerm_resource_group.RG.name
-  location = azurerm_resource_group.RG.location
-  version = "12.0"
+  name                         = "azsqlsrv"
+  resource_group_name          = azurerm_resource_group.RG.name
+  location                     = azurerm_resource_group.RG.location
+  version                      = "12.0"
   administrator_login          = "missadministrator"
   administrator_login_password = "azurerm_key_vault_secret.windows_admin_password.value"
   minimum_tls_version          = "1.2"
@@ -223,7 +223,7 @@ resource "azurerm_mssql_server" "AzSQLPaaSDB" {
     login_username = "AzureAD Admin"
     object_id      = "5a99f7b1-a653-4bba-b5bb-21fc29b06f46"
   }
-identity {
+  identity {
     type = "SystemAssigned"
   }
   tags = {
@@ -267,19 +267,19 @@ resource "azurerm_network_security_group" "NSG" {
 }
 
 resource "azurerm_network_security_rule" "NSGRULE" {
-    name                        = "NSGRULE"
-    resource_group_name         = azurerm_resource_group.RG.name
-    network_security_group_name = azurerm_network_security_group.NSG.name
-    priority                    = 100
-    direction                   = "Inbound"
-    access                      = "Allow"
-    protocol                    = "Tcp"
-    source_port_range           = "116.68.78.47"
-    destination_port_range      = "22"
-    source_address_prefix       = "116.68.78.47/32"
-    destination_address_prefix  = "*"
+  name                        = "NSGRULE"
+  resource_group_name         = azurerm_resource_group.RG.name
+  network_security_group_name = azurerm_network_security_group.NSG.name
+  priority                    = 100
+  direction                   = "Inbound"
+  access                      = "Allow"
+  protocol                    = "Tcp"
+  source_port_range           = "116.68.78.47"
+  destination_port_range      = "22"
+  source_address_prefix       = "116.68.78.47/32"
+  destination_address_prefix  = "*"
 
-  }
+}
 
 resource "azurerm_subnet_network_security_group_association" "NSGASSOCA" {
   subnet_id                 = azurerm_subnet.SUBA.id

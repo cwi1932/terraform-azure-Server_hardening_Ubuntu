@@ -18,7 +18,7 @@ jobs:
     runs-on: ubuntu-latest
     defaults:
       run:
-        working-directory: Terraform/Terraform
+        working-directory: Terraform
     env:
       ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
       ARM_CLIENT_SECRET: ${{ secrets.ARM_CLIENT_SECRET }}
@@ -28,6 +28,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v3
+        with:
+         fetch-depth: 0
       - name: Setup TFLint
         uses: terraform-linters/setup-tflint@v6
         with:
@@ -48,6 +50,7 @@ jobs:
       - uses: hashicorp/setup-terraform@v2
         with:
           terraform_version: 1.7.5
+          terraform_wrapper: false
       - name: Terraform Format
         id: fmt
         run: terraform fmt -check -recursive
