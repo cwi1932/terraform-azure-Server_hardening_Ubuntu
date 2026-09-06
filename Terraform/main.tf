@@ -174,7 +174,7 @@ resource "azurerm_linux_virtual_machine" "VMB-BackendA" {
     sku       = "server"
     version   = "latest"
   }
-  size           = "Standard_B1s"
+  size           = "Standard_D3_v2"
   admin_username = "adminuser"
 
   identity {
@@ -205,7 +205,7 @@ resource "azurerm_linux_virtual_machine" "VMB-BackendB" {
     sku       = "server"
     version   = "latest"
   }
-  size           = "Standard_B1s"
+  size           = "Standard_D3_v2"
   admin_username = "adminuser"
 
   identity {
