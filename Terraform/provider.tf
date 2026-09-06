@@ -6,7 +6,7 @@ terraform {
     key                  = "terraform.tfstate"
 
     # THIS IS THE CRITICAL FIX FOR THE BACKEND STAGE
-    use_azure_cli = True
+    use_azuread_auth     = true
   }
 
   required_version = ">=1.1.0"
