@@ -50,12 +50,18 @@ jobs:
       - uses: hashicorp/setup-terraform@v2
         with:
           terraform_version: 1.7.5
+          terraform_wrapper: false
       - name: Terraform Format
         id: fmt
         run: terraform fmt -check -recursive
       - name: Terraform Init
         id: init
-        run: terraform init 
+        run: |
+         terraform init 
+            -backend-config="client_id=${{ secrets.ARM_CLIENT_ID }}" \
+            -backend-config="client_secret=${{ secrets.ARM_CLIENT_SECRET }}" \
+            -backend-config="subscription_id=${{ secrets.ARM_SUBSCRIPTION_ID }}" \
+            -backend-config="tenant_id=${{ secrets.ARM_TENANT_ID }}"
       - name: Terraform Validate
         id: validate
         run: terraform validate 
