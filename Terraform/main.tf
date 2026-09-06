@@ -146,7 +146,7 @@ resource "azurerm_lb_outbound_rule" "outbound_rule_LB" {
 
   frontend_ip_configuration {
     name = "PublicIPAddress"
-    
+
 
 
   }
