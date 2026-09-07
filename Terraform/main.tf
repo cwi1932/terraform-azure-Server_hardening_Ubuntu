@@ -215,7 +215,7 @@ resource "azurerm_linux_virtual_machine" "VMB-BackendB" {
 }
 
 resource "azurerm_mssql_server" "AzSQLPaaSDB" {
-  name                         = "azsqlsrv"
+  name                         = "azsqlsrvpramod2026"
   resource_group_name          = azurerm_resource_group.RG.name
   location                     = azurerm_resource_group.RG.location
   version                      = "12.0"
