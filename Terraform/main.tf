@@ -240,7 +240,7 @@ resource "azurerm_mssql_server" "AzSQLPaaSDB" {
 }
 
 resource "azurerm_network_interface" "VMNIC1" {
-  name                = "MNIC"
+  name                = "MNIC1"
   resource_group_name = azurerm_resource_group.RG.name
   location            = azurerm_resource_group.RG.location
 
@@ -254,7 +254,7 @@ resource "azurerm_network_interface" "VMNIC1" {
 }
 
 resource "azurerm_network_interface" "VMNIC2" {
-  name                = "MNIC"
+  name                = "MNIC2"
   resource_group_name = azurerm_resource_group.RG.name
   location            = azurerm_resource_group.RG.location
 
