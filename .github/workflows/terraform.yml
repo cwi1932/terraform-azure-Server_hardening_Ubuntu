@@ -41,6 +41,8 @@ jobs:
 
       - name: Init TFLint
         run: tflint --init
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
       - name: Run TFLint
         run: tflint  
       - name: Run Gitleaks
