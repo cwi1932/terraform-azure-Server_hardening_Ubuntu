@@ -6,17 +6,17 @@ resource "azurerm_resource_group" "RG" {
 data "azurerm_client_config" "current" {
 }
 
-resource "random_password" "windows_admin_password" {
-
-  length           = 16
-  special          = true
-  override_special = "!#$%&*()-_=+[]{}<>:?"
-  min_upper        = 1
-  min_lower        = 1
-  min_numeric      = 1
-  min_special      = 1
-
-}
+  resource "random_password" "windows_admin_password" {
+    length      = 16
+    special     = true
+    
+    override_special = "!#$%&*()-_=+[]{}<>" 
+    
+    min_upper   = 2 # Bumped to ensure strong complexity distribution
+    min_lower   = 2
+    min_numeric = 2
+    min_special = 2
+  }
 
 
 resource "azurerm_virtual_network" "SRV_HRD_VNT1" {
@@ -174,7 +174,7 @@ resource "azurerm_linux_virtual_machine" "VMB-BackendA" {
     sku       = "server"
     version   = "latest"
   }
-  size           = "Standard_D3_v2"
+  size           = "Standard_B2s"
   admin_username = "adminuser"
 
   identity {
@@ -205,7 +205,7 @@ resource "azurerm_linux_virtual_machine" "VMB-BackendB" {
     sku       = "server"
     version   = "latest"
   }
-  size           = "Standard_D3_v2"
+  size           = "Standard_B2s"
   admin_username = "adminuser"
 
   identity {
@@ -220,8 +220,13 @@ resource "azurerm_mssql_server" "AzSQLPaaSDB" {
   location                     = azurerm_resource_group.RG.location
   version                      = "12.0"
   administrator_login          = "missadministrator"
-  administrator_login_password = "azurerm_key_vault_secret.windows_admin_password.value"
+  administrator_login_password = azurerm_key_vault_secret.windows_admin_password.value
   minimum_tls_version          = "1.2"
+
+  depends_on = [
+    azurerm_key_vault_secret.windows_admin_password
+  ]
+  
   azuread_administrator {
     login_username = "AzureAD Admin"
     object_id      = "5a99f7b1-a653-4bba-b5bb-21fc29b06f46"
@@ -310,9 +315,7 @@ resource "azurerm_key_vault_secret" "windows_admin_password" {
   name         = "windows-admin-password"
   value        = random_password.windows_admin_password.result
   key_vault_id = azurerm_key_vault.KV.id
-  depends_on = [
-    azurerm_role_assignment.MssqlServer_kv_role
-  ]
+  
 }
 resource "azurerm_role_assignment" "backendA_kv_role" {
   scope                = azurerm_key_vault.KV.id
