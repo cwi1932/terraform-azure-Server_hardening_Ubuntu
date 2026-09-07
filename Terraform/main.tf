@@ -6,17 +6,17 @@ resource "azurerm_resource_group" "RG" {
 data "azurerm_client_config" "current" {
 }
 
-  resource "random_password" "windows_admin_password" {
-    length      = 16
-    special     = true
-    
-    override_special = "!#$%&*()-_=+[]{}<>" 
-    
-    min_upper   = 2 # Bumped to ensure strong complexity distribution
-    min_lower   = 2
-    min_numeric = 2
-    min_special = 2
-  }
+resource "random_password" "windows_admin_password" {
+  length  = 16
+  special = true
+
+  override_special = "!#$%&*()-_=+[]{}<>"
+
+  min_upper   = 2 # Bumped to ensure strong complexity distribution
+  min_lower   = 2
+  min_numeric = 2
+  min_special = 2
+}
 
 
 resource "azurerm_virtual_network" "SRV_HRD_VNT1" {
@@ -226,7 +226,7 @@ resource "azurerm_mssql_server" "AzSQLPaaSDB" {
   depends_on = [
     azurerm_key_vault_secret.windows_admin_password
   ]
-  
+
   azuread_administrator {
     login_username = "AzureAD Admin"
     object_id      = "5a99f7b1-a653-4bba-b5bb-21fc29b06f46"
@@ -315,7 +315,7 @@ resource "azurerm_key_vault_secret" "windows_admin_password" {
   name         = "windows-admin-password"
   value        = random_password.windows_admin_password.result
   key_vault_id = azurerm_key_vault.KV.id
-  
+
 }
 resource "azurerm_role_assignment" "backendA_kv_role" {
   scope                = azurerm_key_vault.KV.id
