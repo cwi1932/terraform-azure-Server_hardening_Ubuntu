@@ -21,7 +21,7 @@ jobs:
       backendB_ip: ${{ steps.tf-output.outputs.backendB_ip }}
     defaults:
       run:
-        working-directory: Terraform/Terraform
+        working-directory: ./Terraform
     env:
       ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
       ARM_CLIENT_SECRET: ${{ secrets.ARM_CLIENT_SECRET }}
