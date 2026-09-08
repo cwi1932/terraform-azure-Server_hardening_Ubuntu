@@ -8,7 +8,7 @@ on:
   pull_request:
     branches:
       - main
-
+   
 permissions:
     contents: read
     pull-requests: write
@@ -16,21 +16,20 @@ jobs:
   terraform:
     name: Terraform
     runs-on: ubuntu-latest
-    outputs:
-      backendA_ip: ${{ steps.tf-output.outputs.backendA_ip }}
-      backendB_ip: ${{ steps.tf-output.outputs.backendB_ip }}
     defaults:
       run:
-        working-directory: Terraform/Terraform
+        working-directory: Terraform
     env:
       ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
       ARM_CLIENT_SECRET: ${{ secrets.ARM_CLIENT_SECRET }}
       ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
       ARM_TENANT_ID: ${{ secrets.ARM_TENANT_ID }}
-
+          
     steps:
       - name: Checkout
         uses: actions/checkout@v3
+        with:
+         fetch-depth: 0
       - name: Setup TFLint
         uses: terraform-linters/setup-tflint@v6
         with:
@@ -42,8 +41,10 @@ jobs:
 
       - name: Init TFLint
         run: tflint --init
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
       - name: Run TFLint
-        run: tflint
+        run: tflint  
       - name: Run Gitleaks
         uses: gitleaks/gitleaks-action@v2
         env:
@@ -51,42 +52,28 @@ jobs:
       - uses: hashicorp/setup-terraform@v2
         with:
           terraform_version: 1.7.5
+          terraform_wrapper: false
       - name: Terraform Format
         id: fmt
         run: terraform fmt -check -recursive
       - name: Terraform Init
         id: init
-        run: terraform init
+        run: terraform init 
       - name: Terraform Validate
         id: validate
-        run: terraform validate
-      - name: Terraform Plan
+        run: terraform validate 
+      - name : Terraform Plan
         id: plan
-        run: terraform plan -out=tfplan
+        run: terraform plan -out=tfplan   
       - name: Terraform Apply
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         run: terraform apply -auto-approve tfplan
 
-      - name: Get Terraform Outputs
-        id: tf-output
+      - name: Ansible Inventory List
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         run: |
-          echo "backendA_ip=$(terraform output -raw backendA_private_ip)" >> "$GITHUB_OUTPUT"
-          echo "backendB_ip=$(terraform output -raw backendB_private_ip)" >> "$GITHUB_OUTPUT"
-
-  ansible:
-    name: Generate Ansible Inventory
-    runs-on: ubuntu-latest
-    needs: terraform
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-    steps:
-      - name: Create Inventory File
-        run: |
           echo "[backend]" > ansible.ini
-          echo "backendA ansible_host=${{ needs.terraform.outputs.backendA_ip }}" >> ansible.ini
-          echo "backendB ansible_host=${{ needs.terraform.outputs.backendB_ip }}" >> ansible.ini
-      - name: Upload Inventory Artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: ansible-inventory
-          path: ansible.ini
+          echo "backendA ansible_host=$(terraform output -raw backendA_private_ip)" >> ansible.ini
+          echo "backendB ansible_host=$(terraform output -raw backendB_private_ip)" >> ansible.ini      
+        
+  
