@@ -1,49 +1,116 @@
-name: "Terraform CI/CD"
-on:
- pull_request:
-  Branch:-main
- permissions:
-  pull-requests: write
-  
- push:
-   Branch:-main
- path-ignore:
-   - 'docs/**'
-   - '*.md'
+- name :  Backend Web Server
+  hosts:  backend
+  become: true
+  remote_user: adminuser
 
+  tasks:
 
-jobs:
-  build-and-deploy:
-   - name: "Terraform setup"
-     runs-on: ubuntu-latest
-     permissions:
-       contents: read
-       pull-requests: write
-   
+      - name: Gather OS release info
+        ansible.builtin.command: cat /etc/os-release
+        register: os_release
+        changed_when: false
 
- 
-   
-  steps:
-    - name: Checkout
-      uses: actions/checkout@v3
-    - name: Azure Login
-      uses: azure/login@v1
- 
-      with:
-        client-id: ${{ secrets.AZURE_CLIENT_ID }}
-        tenant-id: ${{ secrets.AZURE_TENANT_ID }}
-        subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}    
+      - name: Show OS release
+        ansible.builtin.debug:
+          var: os_release.stdout
+
+      - name: Check CPU usage
+        ansible.builtin.shell: |
+          top -bn1 | grep "Cpu(s)" | awk '{print 100 - $8}'
+        register: cpu_usage
+        changed_when: false
+
+        
+      - name: Check memory usage
+        ansible.builtin.shell: |
+         free | awk '/Mem:/ {print ($3/$2) * 100}'
+        register: memory_usage
+        changed_when: false
+
+      - name: Determine whether reboot is required
+        ansible.builtin.set_fact:
+          reboot_required: "{{ (cpu_usage.stdout | float > 80) or (memory_usage.stdout | float > 80) }}"
       
-   - name: Terraform Init
-     run:  terraform init
-    
-   - name: terraform format
-      run:  terraform fmt
-   - name: Terraform Validate
-      run: terraform validate
-   - name: terraform planning
-      run: terraform plan
+      - name: Reboot and wait for return
+        ansible.builtin.reboot:
+          msg: "Ansible-initiated reboot"
+          reboot_timeout: 600
+          pre_reboot_delay: 60
+          post_reboot_delay: 30
+          connect_timeout: 5
+          test_command: uptime
+        when: reboot_required
 
-   if: ${{ github.event_name == 'pull_request' && github.event.action == 'Merged' }}
-   run: terraform_apply
-  
+      - name: Install and configure Nginx
+        ansible.builtin.apt:
+          name: nginx
+          state: present
+
+      - name: Start and enable Nginx service
+        ansible.builtin.service:
+          name: nginx
+          state: started
+          enabled: true   
+
+      - name : Verify UFW firewall status
+        ansible.builtin.command:
+          cmd: ufw status
+        register: ufw_status
+
+      - name: Enable UFW
+        ansible.builtin.command:
+          cmd: ufw enable
+        when: ufw_status.stdout.find('inactive') != -1
+      - name :  Allow HTTP and HTTPS traffic through UFW
+        ansible.builtin.command:
+          cmd: |
+           ufw allow http
+           ufw allow https
+
+      - name :  Allow SSH traffic through UFW
+        ansible.builtin.command:
+        cmd: ufw allow ssh
+      
+      -  community.general.ufw:
+         rule: limit
+         port: ssh
+         proto: tcp
+         src: 116.68.78.47/32
+         port :'22'
+         destination: any
+      - community.general.ufw:
+        rule: allow
+        port: '80'
+        proto: tcp
+        src:116.68.78.47/32
+        destination: any
+      - community.general.ufw:
+        rule: allow
+        port: '443'
+        proto: tcp
+        src:116.68.78.47/32
+        destination: any 
+
+      - community.general.ufw:
+        rule: deny
+        port: '22'
+        proto: tcp
+        src: 10.0.0.4    
+        destination: 10.0.0.20
+
+      - name: Update apt cache and upgrade packages
+        ansible.builtin.apt:
+        update_cache: yes
+        upgrade: dist   
+
+
+
+    
+
+
+
+     
+    
+
+
+       
