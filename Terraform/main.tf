@@ -238,7 +238,18 @@ resource "azurerm_mssql_server" "AzSQLPaaSDB" {
     environment = "production"
   }
 }
-
+resource "azurerm_public_ip" "backendA_public_ip" {
+  name                = "backendA-public-ip"
+  location            = azurerm_resource_group.RG.location
+  resource_group_name = azurerm_resource_group.RG.name
+  allocation_method   = "Static"
+}
+resource "azurerm_public_ip" "backendB_public_ip" {
+  name                = "backendB-public-ip"
+  location            = azurerm_resource_group.RG.location
+  resource_group_name = azurerm_resource_group.RG.name
+  allocation_method   = "Static"
+}
 resource "azurerm_network_interface" "VMNIC1" {
   name                = "MNIC1"
   resource_group_name = azurerm_resource_group.RG.name
@@ -248,6 +259,7 @@ resource "azurerm_network_interface" "VMNIC1" {
     name                          = "internal"
     subnet_id                     = azurerm_subnet.SUBA.id
     private_ip_address_allocation = "Dynamic"
+    public_ip_address_id          = azurerm_public_ip.backendA_public_ip.id
   }
 
 
@@ -262,6 +274,7 @@ resource "azurerm_network_interface" "VMNIC2" {
     name                          = "internal"
     subnet_id                     = azurerm_subnet.SUBB.id
     private_ip_address_allocation = "Dynamic"
+    public_ip_address_id          = azurerm_public_ip.backendB_public_ip.id
   }
 
 
@@ -274,8 +287,8 @@ resource "azurerm_network_security_group" "NSG" {
 
 }
 
-resource "azurerm_network_security_rule" "NSGRULE" {
-  name                        = "NSGRULE"
+resource "azurerm_network_security_rule" "NSGRULE_v4" {
+  name                        = "NSGRULE-IPv4"
   resource_group_name         = azurerm_resource_group.RG.name
   network_security_group_name = azurerm_network_security_group.NSG.name
   priority                    = 100
@@ -284,9 +297,22 @@ resource "azurerm_network_security_rule" "NSGRULE" {
   protocol                    = "Tcp"
   source_port_range           = "*"
   destination_port_range      = "22"
-  source_address_prefix       = "116.68.78.47/32"
+  source_address_prefix       = "116.68.76.191/32"
   destination_address_prefix  = "*"
+}
 
+resource "azurerm_network_security_rule" "NSGRULE_v6" {
+  name                        = "NSGRULE-IPv6"
+  resource_group_name         = azurerm_resource_group.RG.name
+  network_security_group_name = azurerm_network_security_group.NSG.name
+  priority                    = 101
+  direction                   = "Inbound"
+  access                      = "Allow"
+  protocol                    = "Tcp"
+  source_port_range           = "*"
+  destination_port_range      = "22"
+  source_address_prefix       = "2406:8800:80:bca5:e928:fc0b:b731:773f/128"
+  destination_address_prefix  = "*"
 }
 
 resource "azurerm_subnet_network_security_group_association" "NSGASSOCA" {
@@ -335,7 +361,7 @@ resource "azurerm_role_assignment" "MssqlServer_kv_role" {
 }
 
 resource "azurerm_private_dns_zone" "pvszone" {
-  name                = "privatelink.blob.core.windows.net"
+  name                = "internal.serverhardening.local"
   resource_group_name = azurerm_resource_group.RG.name
 }
 

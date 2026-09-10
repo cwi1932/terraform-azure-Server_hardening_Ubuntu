@@ -1,116 +1,98 @@
-- name :  Backend Web Server
-  hosts:  backend
+- name: Backend Web Server
+  hosts: backend
   become: true
   remote_user: adminuser
 
   tasks:
+    - name: Gather OS release info
+      ansible.builtin.command: cat /etc/os-release
+      register: os_release
+      changed_when: false
 
-      - name: Gather OS release info
-        ansible.builtin.command: cat /etc/os-release
-        register: os_release
-        changed_when: false
+    - name: Show OS release
+      ansible.builtin.debug:
+        var: os_release.stdout
 
-      - name: Show OS release
-        ansible.builtin.debug:
-          var: os_release.stdout
-
-      - name: Check CPU usage
-        ansible.builtin.shell: |
-          top -bn1 | grep "Cpu(s)" | awk '{print 100 - $8}'
-        register: cpu_usage
-        changed_when: false
-
+    - name: Check CPU usage
+      ansible.builtin.shell: |
+        top -bn1 | grep "Cpu(s)" | awk '{print 100 - $8}'
+      register: cpu_usage
+      changed_when: false
         
-      - name: Check memory usage
-        ansible.builtin.shell: |
-         free | awk '/Mem:/ {print ($3/$2) * 100}'
-        register: memory_usage
-        changed_when: false
+    - name: Check memory usage
+      ansible.builtin.shell: |
+        free | awk '/Mem:/ {print ($3/$2) * 100}'
+      register: memory_usage
+      changed_when: false
 
-      - name: Determine whether reboot is required
-        ansible.builtin.set_fact:
-          reboot_required: "{{ (cpu_usage.stdout | float > 80) or (memory_usage.stdout | float > 80) }}"
+    - name: Determine whether reboot is required
+      ansible.builtin.set_fact:
+        reboot_required: "{{ (cpu_usage.stdout | float > 80) or (memory_usage.stdout | float > 80) }}"
       
-      - name: Reboot and wait for return
-        ansible.builtin.reboot:
-          msg: "Ansible-initiated reboot"
-          reboot_timeout: 600
-          pre_reboot_delay: 60
-          post_reboot_delay: 30
-          connect_timeout: 5
-          test_command: uptime
-        when: reboot_required
+    - name: Reboot and wait for return
+      ansible.builtin.reboot:
+        msg: "Ansible-initiated reboot"
+        reboot_timeout: 600
+        pre_reboot_delay: 60
+        post_reboot_delay: 30
+        connect_timeout: 5
+        test_command: uptime
+      when: reboot_required
 
-      - name: Install and configure Nginx
-        ansible.builtin.apt:
-          name: nginx
-          state: present
+    - name: Install and configure Nginx
+      ansible.builtin.apt:
+        name: nginx
+        state: present
 
-      - name: Start and enable Nginx service
-        ansible.builtin.service:
-          name: nginx
-          state: started
-          enabled: true   
+    - name: Start and enable Nginx service
+      ansible.builtin.service:
+        name: nginx
+        state: started
+        enabled: true   
 
-      - name : Verify UFW firewall status
-        ansible.builtin.command:
-          cmd: ufw status
-        register: ufw_status
-
-      - name: Enable UFW
-        ansible.builtin.command:
-          cmd: ufw enable
-        when: ufw_status.stdout.find('inactive') != -1
-      - name :  Allow HTTP and HTTPS traffic through UFW
-        ansible.builtin.command:
-          cmd: |
-           ufw allow http
-           ufw allow https
-
-      - name :  Allow SSH traffic through UFW
-        ansible.builtin.command:
-        cmd: ufw allow ssh
-      
-      -  community.general.ufw:
-         rule: limit
-         port: ssh
-         proto: tcp
-         src: 116.68.78.47/32
-         port :'22'
-         destination: any
-      - community.general.ufw:
-        rule: allow
-        port: '80'
+    # STAGE YOUR RULES FIRST
+    - name: Allow SSH traffic from specific IP
+      community.general.ufw:
+        rule: limit
         proto: tcp
-        src:116.68.78.47/32
-        destination: any
-      - community.general.ufw:
-        rule: allow
-        port: '443'
-        proto: tcp
-        src:116.68.78.47/32
-        destination: any 
-
-      - community.general.ufw:
-        rule: deny
+        src: 116.68.76.191/32
         port: '22'
+
+    - name: Allow HTTP traffic from specific IP
+      community.general.ufw:
+        rule: allow
+        proto: tcp
+        src: 116.68.76.191/32
+        port: '80'
+
+    - name: Allow HTTPS traffic from specific IP
+      community.general.ufw:
+        rule: allow
+        proto: tcp
+        src: 116.68.76.191/32
+        port: '443'
+
+    - name: Deny lateral movement SSH from Backend A to Backend B
+      community.general.ufw:
+        rule: deny
         proto: tcp
         src: 10.0.0.4    
-        destination: 10.0.0.20
+        port: '22'
+        dest: 10.0.0.20
 
-      - name: Update apt cache and upgrade packages
-        ansible.builtin.apt:
+    # ENABLE THE FIREWALL AT THE END
+    - name: Verify UFW firewall status
+      ansible.builtin.command:
+        cmd: ufw status
+      register: ufw_status
+      changed_when: false
+
+    - name: Enable UFW
+      ansible.builtin.command:
+        cmd: ufw --force enable
+      when: ufw_status.stdout.find('inactive') != -1
+
+    - name: Update apt cache and upgrade packages
+      ansible.builtin.apt:
         update_cache: yes
-        upgrade: dist   
-
-
-
-    
-
-
-
-     
-    
-
-
-       
+        upgrade: dist
