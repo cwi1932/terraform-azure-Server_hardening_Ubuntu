@@ -25,3 +25,4 @@ terraform.rc
 
 # macOS
 .DS_StoreA
+backend_key.pem
